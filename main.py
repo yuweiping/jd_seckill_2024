@@ -35,7 +35,11 @@ if __name__ == '__main__':
     else:
         cha_time = 0
     if jdSeckill.address is None:
-        jdSeckill.get_address_by_pin()
+        try:
+            jdSeckill.get_address_by_pin()
+        except Exception as e:
+            logger.error("get_address失败: %s" % e)
+            input('---sign失败，请检查cookie,jec,jdgs等配置---')
 
     task_list = eval(global_config.getRaw('config', 'task'))
     logger.info('启动后自动执行预约...')

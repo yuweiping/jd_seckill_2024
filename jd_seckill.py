@@ -397,6 +397,8 @@ class JdSeckill(object):
         data = 'body=' + parse.quote_plus(json.dumps(body, separators=(',', ':'))) + '&'
         resp = self.spider_session.requestWithSign(functionId, body, data)
         resp_json = resp.json()
+        if resp_json['code'] != '0':
+            raise Exception(str(resp_json))
         address_list = resp_json['addressList']
         for address in address_list:
             if address['addressDefault']:
