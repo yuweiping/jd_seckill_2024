@@ -404,6 +404,8 @@ class JdSeckill(object):
             if address['addressDefault']:
                 self.address = address
                 logger.info('获取默认收货地址成功，id：' + str(address['Id']))
+        if address is None:
+            logger.error('没有设置默认收货地址！！！')
 
     # 消息推送
     def send_msg(self, title, content):
