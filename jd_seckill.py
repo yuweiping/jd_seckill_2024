@@ -397,6 +397,7 @@ class JdSeckill(object):
         data = 'body=' + parse.quote_plus(json.dumps(body, separators=(',', ':'))) + '&'
         resp = self.spider_session.requestWithSign(functionId, body, data)
         resp_json = resp.json()
+        logger.info(resp_json)
         if resp_json['code'] != '0':
             raise Exception(str(resp_json))
         address_list = resp_json['addressList']
@@ -404,7 +405,7 @@ class JdSeckill(object):
             if address['addressDefault']:
                 self.address = address
                 logger.info('获取默认收货地址成功，id：' + str(address['Id']))
-        if address is None:
+        if self.address is None:
             logger.error('没有设置默认收货地址！！！')
 
     # 消息推送
