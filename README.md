@@ -8,10 +8,6 @@
 api_jd_url = https://api.m.jd.com/client.action?functionId=genToken&clientVersion=12.2.2……
 
 ---
-非android手机变通方法：
-1. 鸿蒙用户可以通过修改api_jd_url，harmonyOs=0
-2. IOS 修改api_jd_url，client=android    harmonyOs=0（未验证，有成功用户可告知一声）
-
 
 **注意本库只能作为学习用途, 造成的任何问题与本库开发者无关, 如侵犯到你的权益，请联系删除**
 
@@ -19,7 +15,7 @@ sign部分使用的是如下大佬的库，有兴趣的可以关注下
 
 [n1ptune/jdSign: JD signature algorithm implemented by python (github.com)](https://github.com/n1ptune/jdSign)
 
-据说抢茅台需要plus分>103 ,本程序是否会造成封号，降分未完全测试，**后果自负**。
+据说抢茅台需要plus分>=103 ,本程序是否会造成封号，降分未完全测试，**后果自负**。
 
 目前我只用自己的账号测试过好用。。如果sign失败，一般是配置文件有问题，也可以尝试换其他抓包软件。
 
