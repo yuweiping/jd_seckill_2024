@@ -29,6 +29,7 @@ class JdSeckill(object):
         self.has_gen_order = False
         self.fp = global_config.getRaw('config', 'fp')
         self.push_token = global_config.getRaw('config', 'push_token')
+        self.address_id = global_config.getRaw('config', 'address_id')
 
     def make_reserve(self, task):
         """商品预约"""
@@ -397,14 +398,24 @@ class JdSeckill(object):
         data = 'body=' + parse.quote_plus(json.dumps(body, separators=(',', ':'))) + '&'
         resp = self.spider_session.requestWithSign(functionId, body, data)
         resp_json = resp.json()
-        logger.info(resp_json)
+        # logger.info(resp_json['addressList'])
         if resp_json['code'] != '0':
             raise Exception(str(resp_json))
         address_list = resp_json['addressList']
+        if self.address_id is not None:
+            for address in address_list:
+                if str(address['Id']) == self.address_id:
+                    logger.info('获取指定收货地址成功，id：' + str(address['Id']))
+                    self.address = address
+                    return
+            logger.error('没有获取到指定收货地址成功，尝试使用默认收货地址...')
+
         for address in address_list:
             if address['addressDefault']:
-                self.address = address
                 logger.info('获取默认收货地址成功，id：' + str(address['Id']))
+                self.address = address
+                return
+
         if self.address is None:
             logger.error('没有设置默认收货地址！！！')
 
