@@ -26,6 +26,10 @@ api_jd_url = https://api.m.jd.com/client.action?functionId=genToken&clientVersio
 |  address_id|  否 |  如果不使用默认收货地址，可指定地址列表中的其他地址  |
 |  push_token |否| 抢购成功后的推送|
 
+### address_id设置方法
+1. 打开jd_seckill.py 找到get_address_by_pin方法
+2. 取消 # logger.info(resp_json['addressList'])这行的注释
+3. 运行 main.py 可用获取到所有的address。根据自己的标识或者手机号等信息判断要选择的id即可
 
 ### 注意事项
 1. **注意本库只能作为学习用途, 造成的任何问题与本库开发者无关, 如侵犯到你的权益，请联系删除**
