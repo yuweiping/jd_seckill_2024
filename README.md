@@ -6,7 +6,8 @@
 ### 操作步骤：
 1. 将config-test.ini改名为config.ini
 2. 按照手册抓包补全信息，注意config中的配置信息是不用加引号的，**末尾不要有分号**。
-3. main.py
+3. `pip install -r requirements.txt` 安装依赖
+4. `main.py`
 
 如果sign失败大概率是api_jd_url有问题，大家可参考如下格式
 api_jd_url = https://api.m.jd.com/client.action?functionId=genToken&clientVersion=12.2.2……
