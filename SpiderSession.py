@@ -2,7 +2,7 @@ import json
 from jd_logger import logger
 from urllib import parse
 from urllib.parse import urlparse, parse_qs
-
+import sys
 import requests
 from config import global_config
 from sign.jdSign import getSignWithstv
@@ -30,6 +30,9 @@ class SpiderSession:
         self.local_jec = global_config.getRaw('config', 'local_jec')
         self.local_jeh = global_config.getRaw('config', 'local_jeh')
         self.local_jdgs = global_config.getRaw('config', 'local_jdgs')
+        if self.local_cookie == '' or self.local_jec == '' or self.local_jdgs == '' or self.local_jdgs == '':
+            logger.error('配置文件不完整，请补充cookie，jec，jdgs，jd_url等参数')
+            input("配置文件不完整，按 Enter 键退出...")
         self.init_param()
         self.session = self._init_session()
 
@@ -38,15 +41,18 @@ class SpiderSession:
         result.pop('sign', None)
         result.pop('st', None)
         result.pop('sv', None)
-        self.payload = result
-        self.client = result['client']
-        self.client_version = result['clientVersion']
-        self.ep_json = json.loads(self.payload['ep'])
-        self.uuid = util.decode_base64(self.ep_json['cipher']['uuid'])
-        logger.info('uuid:' + self.uuid)
-        self.user_agent = 'okhttp/3.12.16;jdmall;' + self.client + ';version/' + self.client_version + ';build/' + \
-                          result['build'] + ';'
-        logger.info('user_agent:' + self.user_agent)
+        try:
+            self.payload = result
+            self.client = result['client']
+            self.client_version = result['clientVersion']
+            self.ep_json = json.loads(self.payload['ep'])
+            self.uuid = util.decode_base64(self.ep_json['cipher']['uuid'])
+            self.user_agent = 'okhttp/3.12.16;jdmall;' + self.client + ';version/' + self.client_version + ';build/' + \
+                              result['build'] + ';'
+        except Exception as e:
+            logger.error('api_jd_url参数中应包含client，clientVersion，build，ep等参数')
+            input("配置文件错误，按 Enter 键退出...")
+            sys.exit()
 
     def _init_session(self):
         session = requests.session()
@@ -80,6 +86,7 @@ class SpiderSession:
         except Exception as e:
             logger.error("get请求错误: %s" % e)
             input("网络请求错误，按 Enter 键退出...")
+            sys.exit()
 
     def post(self, url, **kwargs):
         """封装post方法"""
@@ -93,6 +100,7 @@ class SpiderSession:
         except Exception as e:
             logger.error("post请求错误: %s" % e)
             input("网络请求错误，按 Enter 键退出...")
+            sys.exit()
 
     def init_cookies(self):
         cookie_jar = requests.cookies.RequestsCookieJar()

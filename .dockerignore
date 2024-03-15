@@ -1,0 +1,14 @@
+__pycache__/
+jd_seckill.log
+/.idea/
+/dist/
+/venv/
+/build/
+/out/
+/bak/
+/doc/
+/hook/
+/.git/
+config.ini
+Dockerfile
+nuitka.ps1

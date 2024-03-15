@@ -1,6 +1,5 @@
 import json
 import multiprocessing
-import os
 import time
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timedelta
@@ -61,11 +60,8 @@ class JdSeckill(object):
         end_time = util.local_time()
         req_time = end_time - start_time
         logger.info('单次请求时间' + str(req_time) + ' ms')
-        if req_time > 800:
-            if os.environ["http_proxy"]:
-                logger.warn('单次请求时间过长很难抢到，请更换代理')
-            else:
-                logger.warn('单次请求时间过长很难抢到，请检查网络')
+        if req_time > 500:
+            logger.warn('单次请求时间过长很难抢到')
         return jd_timestamp
 
     def jd_local_time_diff(self):
@@ -123,7 +119,7 @@ class JdSeckill(object):
             except Exception as e:
                 logger.error('抢购发生异常' + str(e))
                 # 抛异常时，只停止自己的进程
-                break
+                # break
             # 判断是否停止
             self.seckill_canstill_running(seckill_stop_event)
 
@@ -153,6 +149,7 @@ class JdSeckill(object):
         if current_time > end_time:
             seckill_stop_event.set()
             logger.info('超过允许的运行时间，任务结束。')
+            self.send_msg('抢购失败', '超过允许的运行时间，任务结束。')
 
     def request_seckill_url(self):
         logger.info('3. seckill.action ')
@@ -195,7 +192,7 @@ class JdSeckill(object):
             else:
                 logger.error('抢购失败，返回信息:{}'.format(resp_json))
         except Exception as e:
-            raise Exception('抢购失败，猜测已经抢完了，停止进程...' + str(e))
+            raise Exception('抢购失败，猜测已经抢完了...' + str(e))
 
     def get_seckill_action_url(self):
         url = self.gen_token()
@@ -305,7 +302,7 @@ class JdSeckill(object):
         try:
             if resp.json()['address']:
                 self.init_info = resp.json()
-        except Exception as e:
+        except Exception:
             raise Exception('init.action失败,自动重试...')
 
     # init之后获取新的eid
