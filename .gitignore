@@ -7,3 +7,5 @@ jd_seckill.log
 /out/
 /bak/
 config.ini
+Dockerfile
+nuitka.ps1
