@@ -146,7 +146,7 @@ class JdSeckill(object):
         end_time = util.str2timestamp(end_time_str)
         # jd 服务器当前时间
         current_time = util.local_time() + self.cha
-        if current_time > end_time:
+        if current_time > end_time and not seckill_stop_event.is_set():
             seckill_stop_event.set()
             logger.info('超过允许的运行时间，任务结束。')
             self.send_msg('抢购失败', '超过允许的运行时间，任务结束。')
