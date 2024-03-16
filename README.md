@@ -8,7 +8,18 @@
 1. 通过收到html来判断抢完了还是觉得有点虚。所以还是改回去了，按照配置文件中的时间来结束运行。不用配置太长时间（都是秒没，配长时间没用还可能降分）。
 2. 增加了抢购失败也发送通知
 3. 增加了一些配置参数的判断，更友好一些吧
-4. 预告一下找到一个能增加成功率的方式，这两天写一下教程。
+
+
+### 提高成功率的方法：
+参与抢购至少要发起 6 次请求，而抢购时间一般两秒内就结束。所以理论上单次请求时间超过 400ms 的希望都不大。
+
+下文介绍一种方案能够有效降低单次请求的时间（[付费文章](https://mp.weixin.qq.com/s?__biz=Mzg4NzYzMDQxMg==&mid=2247483727&idx=1&sn=efc36be1ba86da0c0af611b0ba570e8c&chksm=cf863e6cf8f1b77a4e2a93cb43b2912f3f72baa65f5dc277bce8b95a43bbecbd7eb6be8b5e9f#rd)），非通过代码手段来实现的，所有的代码都是开源的。
+
+只是提高成功率，不代表一定能抢到。请大家理性选择。
+
+<img src=".\doc\img1.png"  />
+新方案效果
+<img src=".\doc\img2.png"  />
 
 ### 操作步骤：
 1. 将config-test.ini改名为config.ini
@@ -21,18 +32,18 @@ api_jd_url = https://api.m.jd.com/client.action?functionId=genToken&clientVersio
 
 ### 参数说明
 
-| 参数  | 是否必填 | 说明 |
-|------|------|-------------------------------------|
-|  local_cookies |是|  抓包  |
-|  local_jec|  是 | 抓包|
-|  local_jdgs|是|抓包 |
-|  api_jd_url | 是  |  抓包|
-|  continue_time  |是| 持续时间，实际jd返回html就认为结束了|
-|  work_count|是|  多进程，可参考CPU核数  |
-|  fp | 是  |  [点击获取](https://blog.auto100.org/jd)  |
-|  task | 是  |  配置任务,商品，预约时间，抢购时间  |
-|  address_id|  否 |  如果不使用默认收货地址，可指定地址列表中的其他地址  |
-|  push_token |否| 抢购成功后的推送|
+| 参数            | 是否必填 | 说明                                  |
+|---------------|------|-------------------------------------|
+| local_cookies | 是    | 抓包                                  |
+| local_jec     | 是    | 抓包                                  |
+| local_jdgs    | 是    | 抓包                                  |
+| api_jd_url    | 是    | 抓包                                  |
+| continue_time | 是    | 持续时间，实际jd返回html就认为结束了               |
+| work_count    | 是    | 多进程，可参考CPU核数                        |
+| fp            | 是    | [点击获取](https://blog.auto100.org/jd) |
+| task          | 是    | 配置任务,商品，预约时间，抢购时间                   |
+| address_id    | 否    | 如果不使用默认收货地址，可指定地址列表中的其他地址           |
+| push_token    | 否    | 抢购成功后的推送                            |
 
 ### address_id设置方法
 1. 打开jd_seckill.py 找到get_address_by_pin方法
