@@ -10,9 +10,31 @@ import util
 
 
 def url_params_to_json():
+    # 期望的参数列表
+    expected_params = ['functionId', 'clientVersion', 'build', 'client', 'partner', 'oaid', 'sdkVersion', 'lang',
+                       'harmonyOs', 'networkType', 'uts', 'uemps', 'ext', 'eid', 'x-api-eid-token', 'ef', 'ep']
+
     api_jd_url = global_config.getRaw('config', 'api_jd_url')
     tmp_url = urlparse(api_jd_url)
     parad = parse_qs(tmp_url.query)
+
+    # 获取 URL 中的参数名
+    url_params = list(parad.keys())
+
+    # 检查参数是否匹配
+    if set(url_params) == set(expected_params):
+        logger.info("api_jd_url参数校验正确")
+    elif set(expected_params) - set(url_params):
+        missing_params = set(expected_params) - set(url_params)
+        logger.error("api_jd_url缺少以下参数:" + str(missing_params))
+        input("api_jd_url错误，按 Enter 键退出...")
+        sys.exit()
+    else:
+        unnecessary_params = set(url_params) - set(expected_params)
+        logger.info("删除api_jd_url中多余的参数:" + str(unnecessary_params))
+        for extra_param in unnecessary_params:
+            del parad[extra_param]
+
     params_dict = {key: value[0] if len(value) == 1 else value for key, value in parad.items()}
     return params_dict
 
@@ -38,9 +60,6 @@ class SpiderSession:
 
     def init_param(self):
         result = url_params_to_json()
-        result.pop('sign', None)
-        result.pop('st', None)
-        result.pop('sv', None)
         try:
             self.payload = result
             self.client = result['client']
