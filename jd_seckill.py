@@ -25,6 +25,7 @@ class JdSeckill(object):
         self.buy_time = ''
         self.seckill_num = 1
         self.jsTk_info = None
+        self.unickname = ''
         self.has_gen_order = False
         self.fp = global_config.getRaw('config', 'fp')
         self.push_token = global_config.getRaw('config', 'push_token')
@@ -383,6 +384,24 @@ class JdSeckill(object):
             logger.error('jsTk.do失败' + str(e))
             raise Exception('jsTk.do失败')
 
+    def get_nickname(self):
+        functionId = 'newUserInfo'
+        body = {"flag": "nickname", "fromSource": 1, "sourceLevel": 1}
+
+        # 抓包的body
+        data = 'body=' + parse.quote_plus(json.dumps(body, separators=(',', ':'))) + '&'
+        resp = self.spider_session.requestWithSign(functionId, body, data)
+        resp_json = resp.json()
+        if resp_json['code'] != '0':
+            raise Exception(str(resp_json))
+        try:
+            # logger.info(resp_json)
+            # logger.info(resp_json['userInfoSns']['petName'])
+            self.unickname = resp_json['userInfoSns']['petName']
+            logger.info("当前用户名:" + self.unickname)
+        except Exception as e:
+            logger.error('获取当前登录用户名失败：' + e)
+
     def get_address_by_pin(self):
         logger.info("get_address...")
         functionId = 'getAddressByPin'
@@ -422,6 +441,6 @@ class JdSeckill(object):
             return
         url = 'http://www.pushplus.plus/send'
         r = self.spider_session.get(url, params={'token': self.push_token,
-                                                 'title': title,
+                                                 'title': self.unickname + '-' + title,
                                                  'content': content})
         logger.info(f'通知推送结果：{r.status_code, r.text}')

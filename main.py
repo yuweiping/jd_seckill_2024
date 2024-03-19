@@ -38,6 +38,7 @@ if __name__ == '__main__':
         cha_time = 0
     if jdSeckill.address is None:
         try:
+            jdSeckill.get_nickname()
             jdSeckill.get_address_by_pin()
         except Exception as e:
             logger.error("get_address失败: %s" % e)
