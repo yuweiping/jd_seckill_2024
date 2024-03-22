@@ -30,6 +30,7 @@ class JdSeckill(object):
         self.fp = global_config.getRaw('config', 'fp')
         self.push_token = global_config.getRaw('config', 'push_token')
         self.address_id = global_config.getRaw('config', 'address_id')
+        self.seckill_stop_event = False
 
     def make_reserve(self, task):
         """商品预约"""
@@ -84,16 +85,10 @@ class JdSeckill(object):
         self.reset_cookies()
         self.sku_id = task['sku_id']
         self.buy_time = task['buy_time'] + '.000'
+        self.seckill()
 
-        seckill_stop_event = multiprocessing.Manager().Event()
-        # 增加进程配置
-        work_count = int(global_config.getRaw('config', 'work_count'))
-        with ProcessPoolExecutor(work_count) as pool:
-            for i in range(work_count):
-                pool.submit(self.seckill, seckill_stop_event)
-
-    def seckill(self, seckill_stop_event):
-        while not seckill_stop_event.is_set():
+    def seckill(self):
+        while not self.seckill_stop_event:
             try:
                 # 先获取seckill.action
                 if not self.has_gen_seckill_url:
@@ -116,13 +111,13 @@ class JdSeckill(object):
                 # 提交订单
                 if self.has_gen_order:
                     self.update_seckill_cookie()
-                    self.submit_order(seckill_stop_event)
+                    self.submit_order()
             except Exception as e:
                 logger.error('抢购发生异常' + str(e))
                 # 抛异常时，只停止自己的进程
                 # break
             # 判断是否停止
-            self.seckill_canstill_running(seckill_stop_event)
+            self.seckill_canstill_running()
 
     def update_seckill_cookie(self):
         cookie_str = '3AB9D23F7A4B3CSS=' + self.jsTk_info['token']
@@ -135,7 +130,7 @@ class JdSeckill(object):
     def reset_cookies(self):
         self.session.cookies = self.spider_session.init_cookies()
 
-    def seckill_canstill_running(self, seckill_stop_event):
+    def seckill_canstill_running(self):
         """
         计算开始时间
         :return:
@@ -147,8 +142,8 @@ class JdSeckill(object):
         end_time = util.str2timestamp(end_time_str)
         # jd 服务器当前时间
         current_time = util.local_time() + self.cha
-        if current_time > end_time and not seckill_stop_event.is_set():
-            seckill_stop_event.set()
+        if current_time > end_time:
+            self.seckill_stop_event = True
             logger.info('超过允许的运行时间，任务结束。')
             self.send_msg('抢购失败', '超过允许的运行时间，任务结束。')
 
@@ -161,7 +156,7 @@ class JdSeckill(object):
         else:
             raise Exception('seckill.action访问失败')
 
-    def submit_order(self, seckill_stop_event):
+    def submit_order(self):
         url = 'https://marathon.jd.com/seckillnew/orderService/submitOrder.action?skuId=%s' % self.sku_id
 
         logger.info('7. submitOrder.action...')
@@ -189,7 +184,7 @@ class JdSeckill(object):
                 order_id = resp_json.get('orderId')
                 logger.info('抢购成功，订单号------------------->' + str(order_id))
                 self.send_msg('抢购成功', '抢购成功，订单号:' + str(order_id))
-                seckill_stop_event.set()
+                self.seckill_stop_event = True
             else:
                 logger.error('抢购失败，返回信息:{}'.format(resp_json))
         except Exception as e:
