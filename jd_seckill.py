@@ -195,16 +195,6 @@ class JdSeckill(object):
         except Exception as e:
             raise Exception('抢购失败，猜测已经抢完了...' + str(e))
 
-    def get_seckill_action_url(self):
-        url = self.gen_token()
-        while True:
-            self.jump_url(url)
-            if self.seckill_action_url != '':
-                logger.info("get_seckill_action_url成功...")
-                break
-            else:
-                logger.info("get_seckill_action_url失败，自动重试...")
-
     def gen_token(self):
         logger.info("1. genToken...")
         functionId = 'genToken'
@@ -221,27 +211,13 @@ class JdSeckill(object):
         logger.info('genToken 成功: ' + appjmp_url)
         return appjmp_url
 
-    def jump_url(self, url):
-        # https://un.m.jd.com/cgi-bin/app/appjmp
-        # https://divide.jd.com/user_routing?skuId=100012043978&mid=nyPX0yoIQBnq1Tv__rBL6pnsn8OGYGhzjXbNhTsir4A&sid=
-        self.seckill_action_url = url
-        code = 302
-        while code == 302 and self.seckill_action_url != '':
-            # logger.info("2. jump_url: " + self.seckill_action_url)
-            resp = self.spider_session.get(url=self.seckill_action_url, allow_redirects=False)
-            code = resp.status_code
-            if code == 302:
-                self.seckill_action_url = resp.headers.get('location')
-            if self.seckill_action_url != 'https://marathon.jd.com/mobile/koFail.html':
-                set_cookie = resp.headers.get('Set-Cookie')
-                if set_cookie:
-                    self.spider_session.update_cookies(set_cookie)
-            else:
-                self.seckill_action_url = ''
-        # print(self.seckill_action_url)
-        if not self.seckill_action_url.startswith('https://marathon.jd.com/seckillM/seckill.action'):
-            logger.info(self.seckill_action_url)
-            self.seckill_action_url = ''
+    def get_seckill_action_url(self):
+        url = self.gen_token()
+        while not self.seckill_action_url.startswith('https://marathon.jd.com/seckillM/seckill.action'):
+            if self.seckill_action_url != '':
+                logger.info("get_seckill_action_url失败..." + self.seckill_action_url)
+            resp = self.spider_session.get(url=url, allow_redirects=True)
+            self.seckill_action_url = resp.url
 
     def gen_order_data(self):
         logger.info('6. gen_order_data...')
