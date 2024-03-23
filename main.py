@@ -30,12 +30,6 @@ if __name__ == '__main__':
     logger.warning("本服务完全免费，不会向您收取任何费用。请注意甄别！")
     jdSeckill = JdSeckill()
     cha = jdSeckill.jd_local_time_diff()
-    # jd时间比本机快，job启动时间就要比预定时间要早
-    cha_time = math.ceil(cha / 1000.0)
-    if cha_time >= 1:
-        logger.warning("jd时间比本机快，job启动时间就要比预定时间要早" + str(cha_time) + "S")
-    else:
-        cha_time = 0
     if jdSeckill.address is None:
         try:
             jdSeckill.get_nickname()
@@ -50,9 +44,11 @@ if __name__ == '__main__':
     for task in task_list:
         jdSeckill.make_reserve(task)
         logger.info(
-            '创建定时任务:%s, %s进行预约, %s准备抢购。' % (task['name'], task['make_reserve_time'], task_time(task['buy_time'], cha_time)))
+            '创建定时任务:%s, %s进行预约, %s准备抢购。' % (task['name'], task['make_reserve_time'],task['buy_time']))
         schedule.every().day.at(task['make_reserve_time']).do(jdSeckill.make_reserve, task)
-        schedule.every().day.at(task_time(task['buy_time'], cha_time)).do(jdSeckill.seckill_by_proc_pool, task)
+        # 提前 2s 获取tokenurl
+        schedule.every().day.at(task_time(task['buy_time'], 2)).do(jdSeckill.gen_token)
+        schedule.every().day.at(task['buy_time']).do(jdSeckill.seckill_by_proc_pool, task)
 
     while True:
         schedule.run_pending()

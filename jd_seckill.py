@@ -31,6 +31,7 @@ class JdSeckill(object):
         self.push_token = global_config.getRaw('config', 'push_token')
         self.address_id = global_config.getRaw('config', 'address_id')
         self.seckill_stop_event = False
+        self.token_url = ''
 
     def make_reserve(self, task):
         """商品预约"""
@@ -197,21 +198,18 @@ class JdSeckill(object):
         # 抓包的body
         data = 'body=' + parse.quote_plus(json.dumps(body, separators=(',', ':'))) + '&'
         resp = self.spider_session.requestWithSign(functionId, body, data)
-        appjmp_url = ''
         if util.response_status(resp):
             token_params = resp.json()
             if token_params['code'] == '0':
-                appjmp_url = '%s?tokenKey=%s&to=https://divide.jd.com/user_routing?skuId=%s&from=app' % (
+                self.token_url = '%s?tokenKey=%s&to=https://divide.jd.com/user_routing?skuId=%s&from=app' % (
                     token_params['url'], token_params['tokenKey'], self.sku_id)
-        logger.info('genToken 成功: ' + appjmp_url)
-        return appjmp_url
+        logger.info('genToken 成功: ' + self.token_url)
 
     def get_seckill_action_url(self):
-        url = self.gen_token()
         while not self.seckill_action_url.startswith('https://marathon.jd.com/seckillM/seckill.action'):
             if self.seckill_action_url != '':
                 logger.info("get_seckill_action_url失败..." + self.seckill_action_url)
-            resp = self.spider_session.get(url=url, allow_redirects=True)
+            resp = self.spider_session.get(url=self.token_url, allow_redirects=True)
             self.seckill_action_url = resp.url
 
     def gen_order_data(self):
@@ -371,7 +369,7 @@ class JdSeckill(object):
             self.unickname = resp_json['userInfoSns']['petName']
             logger.info("当前用户名:" + self.unickname)
         except Exception as e:
-            logger.error('获取当前登录用户名失败：' + e)
+            logger.error('获取当前登录用户名失败：' + str(e))
 
     def get_address_by_pin(self):
         logger.info("get_address...")
