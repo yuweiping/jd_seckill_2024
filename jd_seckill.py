@@ -400,7 +400,7 @@ class JdSeckill(object):
             self.unickname = resp_json['userInfoSns']['petName']
             logger.info("当前用户名:" + self.unickname)
         except Exception as e:
-            logger.error('获取当前登录用户名失败：' + e)
+            logger.error('获取当前登录用户名失败：' + str(e))
 
     def get_address_by_pin(self):
         logger.info("get_address...")
