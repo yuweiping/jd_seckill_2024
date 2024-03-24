@@ -75,6 +75,10 @@ class SpiderSession:
 
     def _init_session(self):
         session = requests.session()
+        # 设置连接池的大小
+        adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=20)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
         session.headers = self.get_headers()
         session.cookies = self.init_cookies()
         return session

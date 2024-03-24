@@ -88,6 +88,10 @@ class JdSeckill(object):
         self.buy_time = task['buy_time'] + '.000'
         self.seckill()
 
+    def prepare(self):
+        self.gen_token()
+        self.do_jsTk()
+
     def seckill(self):
         while not self.seckill_stop_event:
             try:
@@ -95,7 +99,7 @@ class JdSeckill(object):
                 if not self.has_gen_seckill_url:
                     self.get_seckill_action_url()
                     self.request_seckill_url()
-                    self._do_jsTk(self.seckill_action_url)
+                    # self.do_jsTk()
             except Exception as e:
                 self.has_gen_seckill_url = False
                 logger.error('seckill_url生成异常' + str(e))
@@ -154,6 +158,7 @@ class JdSeckill(object):
         set_cookie = resp.headers.get('Set-Cookie')
         if set_cookie:
             self.spider_session.update_cookies(set_cookie)
+            self.has_gen_seckill_url = True
         else:
             raise Exception('seckill.action访问失败')
 
@@ -192,7 +197,6 @@ class JdSeckill(object):
             raise Exception('抢购失败，猜测已经抢完了...' + str(e))
 
     def gen_token(self):
-        logger.info("1. genToken...")
         functionId = 'genToken'
         body = {"action": "to", 'to': parse.quote_plus('https://divide.jd.com/user_routing?skuId=' + self.sku_id)}
         # 抓包的body
@@ -205,12 +209,35 @@ class JdSeckill(object):
                     token_params['url'], token_params['tokenKey'], self.sku_id)
         logger.info('genToken 成功: ' + self.token_url)
 
+    def jump_url(self, url):
+        # https://un.m.jd.com/cgi-bin/app/appjmp
+        # https://divide.jd.com/user_routing?skuId=100012043978&mid=nyPX0yoIQBnq1Tv__rBL6pnsn8OGYGhzjXbNhTsir4A&sid=
+        self.seckill_action_url = url
+        code = 302
+        while code == 302 and self.seckill_action_url != '':
+            # logger.info("2. jump_url: " + self.seckill_action_url)
+            resp = self.spider_session.get(url=self.seckill_action_url, allow_redirects=False)
+            code = resp.status_code
+            if code == 302:
+                self.seckill_action_url = resp.headers.get('location')
+            if self.seckill_action_url != 'https://marathon.jd.com/mobile/koFail.html':
+                set_cookie = resp.headers.get('Set-Cookie')
+                if set_cookie:
+                    self.spider_session.update_cookies(set_cookie)
+            else:
+                self.seckill_action_url = ''
+        if not self.seckill_action_url.startswith('https://marathon.jd.com/seckillM/seckill.action'):
+            # logger.info(self.seckill_action_url)
+            self.seckill_action_url = ''
+
     def get_seckill_action_url(self):
-        while not self.seckill_action_url.startswith('https://marathon.jd.com/seckillM/seckill.action'):
+        while True:
+            self.jump_url(self.token_url)
             if self.seckill_action_url != '':
-                logger.info("get_seckill_action_url失败..." + self.seckill_action_url)
-            resp = self.spider_session.get(url=self.token_url, allow_redirects=True)
-            self.seckill_action_url = resp.url
+                logger.info("get_seckill_action_url成功...")
+                break
+            else:
+                logger.info("get_seckill_action_url失败，自动重试...")
 
     def gen_order_data(self):
         logger.info('6. gen_order_data...')
@@ -276,8 +303,8 @@ class JdSeckill(object):
             raise Exception('init.action失败,自动重试...')
 
     # init之后获取新的eid
-    def _do_jsTk(self, seckill_url):
-        logger.info('jsTk.do... ' + seckill_url)
+    def do_jsTk(self):
+        seckill_url = 'https://marathon.jd.com/seckillM/seckill.action?skuId=100012043978&num=1&rid=1711252801&deliveryMode='
         url = 'https://gia.jd.com/jsTk.do?'
         g = {"pin": "", "oid": "", "bizId": "JD_INDEP", "mode": "strict", "p": "s",
              "fp": self.fp, "ctype": 1, "v": "3.1.1.0", "f": "3",
@@ -344,11 +371,10 @@ class JdSeckill(object):
         d["n"]["userAgent"] = self.spider_session.user_agent
         data = 'd=' + util.TDEncrypt(json.dumps(d, separators=(',', ':')))
         resp = self.spider_session.post(url=url, data=data)
-        # logger.info('jsTk.do: ' + str(resp.text))
+        logger.info('jsTk.do: ' + str(resp.text))
 
         try:
             self.jsTk_info = resp.json()['data']
-            self.has_gen_seckill_url = True
         except Exception as e:
             logger.error('jsTk.do失败' + str(e))
             raise Exception('jsTk.do失败')

@@ -47,7 +47,7 @@ if __name__ == '__main__':
             '创建定时任务:%s, %s进行预约, %s准备抢购。' % (task['name'], task['make_reserve_time'],task['buy_time']))
         schedule.every().day.at(task['make_reserve_time']).do(jdSeckill.make_reserve, task)
         # 提前 2s 获取tokenurl
-        schedule.every().day.at(task_time(task['buy_time'], 2)).do(jdSeckill.gen_token)
+        schedule.every().day.at(task_time(task['buy_time'], 2)).do(jdSeckill.prepare)
         schedule.every().day.at(task['buy_time']).do(jdSeckill.seckill_by_proc_pool, task)
 
     while True:

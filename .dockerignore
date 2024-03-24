@@ -11,3 +11,4 @@ __pycache__/
 config.ini
 Dockerfile
 nuitka.ps1
+test.py
