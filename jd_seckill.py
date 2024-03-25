@@ -14,7 +14,7 @@ from urllib import parse
 class JdSeckill(object):
 
     def __init__(self):
-        self.has_gen_seckill_url = False
+        self.has_request_seckill_url = False
         self.cha = 0
         self.order_data = None
         self.seckill_action_url = ''
@@ -81,27 +81,32 @@ class JdSeckill(object):
             logger.warning('时间差值过大，建议先同步下时间再重启下软件')
         return self.cha
 
-    def seckill_by_proc_pool(self, task):
-        # 重置cookie
-        self.reset_cookies()
+    def prepare(self, task):
+        # 初始化一些变量
         self.sku_id = task['sku_id']
         self.buy_time = task['buy_time'] + '.000'
-        self.seckill()
-
-    def prepare(self):
+        self.seckill_action_url = ''
+        self.has_request_seckill_url = False
+        self.has_gen_order = False
+        self.seckill_stop_event = False
+        # 重置cookie
+        self.reset_cookies()
         self.gen_token()
         self.do_jsTk()
 
     def seckill(self):
+
         while not self.seckill_stop_event:
+            self.get_seckill_action_url()
+            # 没获取到正确的url就退出
+            if self.seckill_action_url == '':
+                logger.error('多次获取seckill_action_url失败，退出')
+                break
             try:
                 # 先获取seckill.action
-                if not self.has_gen_seckill_url:
-                    self.get_seckill_action_url()
+                if not self.has_request_seckill_url:
                     self.request_seckill_url()
-                    # self.do_jsTk()
             except Exception as e:
-                self.has_gen_seckill_url = False
                 logger.error('seckill_url生成异常' + str(e))
 
             try:
@@ -146,7 +151,7 @@ class JdSeckill(object):
             time_object + timedelta(seconds=int(global_config.getRaw('config', 'continue_time'))), time_format)
         end_time = util.str2timestamp(end_time_str)
         # jd 服务器当前时间
-        current_time = util.local_time() + self.cha
+        current_time = util.local_time()
         if current_time > end_time:
             self.seckill_stop_event = True
             logger.info('超过允许的运行时间，任务结束。')
@@ -158,7 +163,7 @@ class JdSeckill(object):
         set_cookie = resp.headers.get('Set-Cookie')
         if set_cookie:
             self.spider_session.update_cookies(set_cookie)
-            self.has_gen_seckill_url = True
+            self.has_request_seckill_url = True
         else:
             raise Exception('seckill.action访问失败')
 
@@ -231,13 +236,16 @@ class JdSeckill(object):
             self.seckill_action_url = ''
 
     def get_seckill_action_url(self):
-        while True:
+        i = 0
+        # 重试20次，多了时间太长基本也抢不到了
+        while i < 20:
             self.jump_url(self.token_url)
             if self.seckill_action_url != '':
                 logger.info("get_seckill_action_url成功...")
                 break
             else:
-                logger.info("get_seckill_action_url失败，自动重试...")
+                i += 1
+                logger.info(f"get_seckill_action_url失败，自动重试 {i}...")
 
     def gen_order_data(self):
         logger.info('6. gen_order_data...')
@@ -304,15 +312,12 @@ class JdSeckill(object):
 
     # init之后获取新的eid
     def do_jsTk(self):
-        seckill_url = 'https://marathon.jd.com/seckillM/seckill.action?skuId=100012043978&num=1&rid=1711252801&deliveryMode='
+        seckill_url = 'https://marathon.jd.com/seckillM/seckill.action?skuId=' + self.sku_id + '&num=1&rid=' + str(
+            round(time.time())) + '&deliveryMode='
         url = 'https://gia.jd.com/jsTk.do?'
-        g = {"pin": "", "oid": "", "bizId": "JD_INDEP", "mode": "strict", "p": "s",
-             "fp": self.fp, "ctype": 1, "v": "3.1.1.0", "f": "3",
-             "o": "marathon.jd.com/seckillM/seckill.action",
-             "qs": "skuId=100012043978&num=1&rid=1701403262&deliveryMode=#/", "qi": ""}
-        tmp_url = parse.urlparse(seckill_url)
-        query = tmp_url.query
-        g['qs'] = query + '#/'
+        g = {"pin": "", "oid": "", "bizId": "JD_INDEP", "mode": "strict", "p": "s", "fp": self.fp, "ctype": 1,
+             "v": "3.1.1.0", "f": "3", "o": "marathon.jd.com/seckillM/seckill.action",
+             'qs': parse.urlparse(seckill_url).query + '#/', "qi": ""}
         a = util.TDEncrypt(g)
         url = url + 'a=' + parse.quote(a, safe='*,/')
         d = {"ts": {"deviceTime": 1701403263780, "deviceEndTime": 1701403263780},
