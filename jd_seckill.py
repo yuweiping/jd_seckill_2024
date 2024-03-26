@@ -95,24 +95,23 @@ class JdSeckill(object):
         self.do_jsTk()
 
     def seckill(self):
-
+        self.get_seckill_action_url()
+        # 没获取到正确的url就退出
+        if self.seckill_action_url == '':
+            logger.error('多次获取seckill_action_url失败，退出')
+            return
         while not self.seckill_stop_event:
-            self.get_seckill_action_url()
-            # 没获取到正确的url就退出
-            if self.seckill_action_url == '':
-                logger.error('多次获取seckill_action_url失败，退出')
-                break
             try:
                 # 先获取seckill.action
                 if not self.has_request_seckill_url:
                     self.request_seckill_url()
             except Exception as e:
-                logger.error('seckill_url生成异常' + str(e))
+                logger.error('seckill_url访问异常' + str(e))
 
             try:
                 # 生成订单信息
                 if not self.has_gen_order:
-                    self._get_init_info()
+                    self.get_init_info()
                     self.gen_order_data()
             except Exception as e:
                 self.has_gen_order = False
@@ -286,7 +285,7 @@ class JdSeckill(object):
         self.has_gen_order = True
         self.order_data = data
 
-    def _get_init_info(self):
+    def get_init_info(self):
         """获取秒杀初始化信息（包括：地址，发票，token）
         :return: 初始化信息组成的dict
         """
@@ -376,7 +375,7 @@ class JdSeckill(object):
         d["n"]["userAgent"] = self.spider_session.user_agent
         data = 'd=' + util.TDEncrypt(json.dumps(d, separators=(',', ':')))
         resp = self.spider_session.post(url=url, data=data)
-        logger.info('jsTk.do: ' + str(resp.text))
+        # logger.info('jsTk.do: ' + str(resp.text))
 
         try:
             self.jsTk_info = resp.json()['data']

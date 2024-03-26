@@ -11,7 +11,7 @@ import util
 
 def url_params_to_json():
     # 期望的参数列表
-    expected_params = ['functionId', 'clientVersion', 'build', 'client', 'partner', 'oaid', 'sdkVersion', 'lang',
+    expected_params = ['functionId', 'clientVersion', 'build', 'client', 'partner', 'sdkVersion', 'lang',
                        'harmonyOs', 'networkType', 'uts', 'uemps', 'ext', 'eid', 'x-api-eid-token', 'ef', 'ep']
 
     api_jd_url = global_config.getRaw('config', 'api_jd_url')
