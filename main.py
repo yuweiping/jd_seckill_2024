@@ -10,11 +10,11 @@ from jd_seckill import JdSeckill
 from config import global_config
 
 import os
-import math
+from setuptools_scm import get_version
 
 proxy = global_config.getRaw('config', 'proxies')
 if proxy:
-    logger.info('已配置系统代理：'+proxy)
+    logger.info('已配置系统代理：' + proxy)
 os.environ["http_proxy"] = proxy
 os.environ["https_proxy"] = proxy
 
@@ -27,7 +27,7 @@ def task_time(time_str, sec):
 
 if __name__ == '__main__':
     logger.warning("开源项目地址：https://github.com/yuweiping/jd_seckill_2024.git ")
-    logger.warning("本服务完全免费，不会向您收取任何费用。请注意甄别！")
+    logger.warning("本服务完全免费，不会向您收取任何费用。请注意甄别！当前版本号："+get_version())
     jdSeckill = JdSeckill()
     cha = jdSeckill.jd_local_time_diff()
     if jdSeckill.address is None:
@@ -44,10 +44,10 @@ if __name__ == '__main__':
     for task in task_list:
         jdSeckill.make_reserve(task)
         logger.info(
-            '创建定时任务:%s, %s进行预约, %s准备抢购。' % (task['name'], task['make_reserve_time'],task['buy_time']))
+            '创建定时任务:%s, %s进行预约, %s准备抢购。' % (task['name'], task['make_reserve_time'], task['buy_time']))
         schedule.every().day.at(task['make_reserve_time']).do(jdSeckill.make_reserve, task)
         # 提前 2s 获取tokenurl
-        schedule.every().day.at(task_time(task['buy_time'], 2)).do(jdSeckill.prepare,task)
+        schedule.every().day.at(task_time(task['buy_time'], 2)).do(jdSeckill.prepare, task)
         schedule.every().day.at(task['buy_time']).do(jdSeckill.seckill)
 
     while True:
