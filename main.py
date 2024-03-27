@@ -10,7 +10,6 @@ from jd_seckill import JdSeckill
 from config import global_config
 
 import os
-from setuptools_scm import get_version
 
 proxy = global_config.getRaw('config', 'proxies')
 if proxy:
@@ -27,7 +26,7 @@ def task_time(time_str, sec):
 
 if __name__ == '__main__':
     logger.warning("开源项目地址：https://github.com/yuweiping/jd_seckill_2024.git ")
-    logger.warning("本服务完全免费，不会向您收取任何费用。请注意甄别！当前版本号："+get_version())
+    logger.warning("本服务完全免费，不会向您收取任何费用。请注意甄别！")
     jdSeckill = JdSeckill()
     cha = jdSeckill.jd_local_time_diff()
     if jdSeckill.address is None:

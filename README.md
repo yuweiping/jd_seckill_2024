@@ -7,7 +7,7 @@
 5. 增加了requests session的连接池设置
 6. get_seckill_action_url增加了次数限制，避免一直失败后无法退出
 7. 移除了jd_url的oaid必填校验
-8. 添加了版本号自动管理setuptools_scm
+
 ----
 多线程目前看会阻塞网络，效果也不好，方案还在尝试中。
 
