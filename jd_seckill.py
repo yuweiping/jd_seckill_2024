@@ -401,8 +401,7 @@ class JdSeckill(object):
         except Exception as e:
             logger.error('获取当前登录用户名失败：' + str(e))
 
-    def get_address_by_pin(self):
-        logger.info("get_address...")
+    def get_address_list(self):
         functionId = 'getAddressByPin'
         body = {"isNeedPickAddressList": True, "isOneOrderMultipleAddress": False, "latitudeString": "wAgx7PWl/2s=",
                 "layerFlag": False, "longitudeString": "wAgx7PWl/2s=", "pageId": 0, "requestSourceType": 2,
@@ -416,18 +415,25 @@ class JdSeckill(object):
         # logger.info(resp_json['addressList'])
         if resp_json['code'] != '0':
             raise Exception(str(resp_json))
-        address_list = resp_json['addressList']
+        return resp_json['addressList']
+
+    def get_address_by_pin(self):
+        address_list = self.get_address_list()
         if self.address_id is not None:
             for address in address_list:
                 if str(address['Id']) == self.address_id:
-                    logger.info('获取指定收货地址成功，id：' + str(address['Id']))
+                    addressId = str(address['Id'])
+                    where = util.decrypt(address['Where'])
+                    logger.info(f"获取指定收货地址成功，id {addressId}  {where}")
                     self.address = address
                     return
             logger.error('没有获取到指定收货地址成功，尝试使用默认收货地址...')
 
         for address in address_list:
             if address['addressDefault']:
-                logger.info('获取默认收货地址成功，id：' + str(address['Id']))
+                addressId = str(address['Id'])
+                where = util.decrypt(address['Where'])
+                logger.info(f"获取默认收货地址成功，id {addressId}  {where}")
                 self.address = address
                 return
 

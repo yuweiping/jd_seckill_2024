@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- encoding=utf8 -*-
-
+import base64
 import json
 import random
 import time
 from datetime import datetime
 from urllib import parse
 import requests
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
 
 
 def response_status(resp):
@@ -38,6 +41,7 @@ def format_time(local_timestamp, time_format):
     if '%f' in time_format:
         formatted_time = formatted_time[:-3]
     return formatted_time
+
 
 def TDEncrypt(m):
     m = json.dumps(m, separators=(',', ':'))
@@ -140,3 +144,18 @@ def str2timestamp(time_str):
     timestamp = round(target_datetime.timestamp() * 1000)
     # print(timestamp)
     return timestamp
+
+
+def decrypt(encrypted_data):
+    key = b"np!u5chin@adm!n1aaaaaaa2"
+    iv = b'\x00' * 8  # 初始化向量 (8字节)
+    cipher = Cipher(algorithms.TripleDES(key), modes.CBC(iv), backend=default_backend())
+
+    decryptor = cipher.decryptor()
+    decrypted_data = decryptor.update(base64.b64decode(encrypted_data)) + decryptor.finalize()
+
+    # 使用PKCS7填充解密后的数据
+    unpadder = padding.PKCS7(64).unpadder()
+    unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
+
+    return unpadded_data.decode()

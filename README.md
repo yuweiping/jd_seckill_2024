@@ -7,6 +7,7 @@
 5. 增加了requests session的连接池设置
 6. get_seckill_action_url增加了次数限制，避免一直失败后无法退出
 7. 移除了jd_url的oaid必填校验
+8. 增加了address的解码方法，要获取指定的addressId，可通过直接运行address.py
 
 ----
 多线程目前看会阻塞网络，效果也不好，方案还在尝试中。
